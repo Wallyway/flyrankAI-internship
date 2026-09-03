@@ -9,6 +9,7 @@ import requests
 USER_AGENT = "FlyRankInternshipA9/1.0 (+https://github.com/Wallyway/flyrankAI-internship)"
 TIMEOUT_SECONDS = 10
 MIN_DELAY_SECONDS = 0.5
+RETRY_PAUSE_SECONDS = 2.0
 
 CACHE_DIR = Path(__file__).resolve().parent.parent / "cache"
 
@@ -41,16 +42,31 @@ class PoliteFetcher:
         if elapsed < MIN_DELAY_SECONDS:
             time.sleep(MIN_DELAY_SECONDS - elapsed)
 
-    def _download(self, url):
+    def _attempt(self, url):
         self._wait_turn()
         try:
             response = self.session.get(url, timeout=TIMEOUT_SECONDS)
+        except requests.Timeout as error:
+            raise FetchError(url, None, f"timeout after {TIMEOUT_SECONDS}s") from error
+        except requests.RequestException as error:
+            raise FetchError(url, None, f"connection error: {error}") from error
         finally:
             self.last_request_at = time.monotonic()
+
         if response.status_code != 200:
             raise FetchError(url, response.status_code, f"HTTP {response.status_code}")
         response.encoding = "utf-8"
         return response.text
+
+    def _download(self, url):
+        try:
+            return self._attempt(url)
+        except FetchError as error:
+            if not error.is_retryable:
+                raise
+            print(f"RETRY {url} after {error.reason}")
+            time.sleep(RETRY_PAUSE_SECONDS)
+            return self._attempt(url)
 
     def fetch(self, url):
         path = cache_path_for(url)
@@ -74,3 +90,9 @@ class FetchError(Exception):
         self.url = url
         self.status = status
         self.reason = reason
+
+    @property
+    def is_retryable(self):
+        if self.status is None:
+            return True
+        return self.status >= 500
