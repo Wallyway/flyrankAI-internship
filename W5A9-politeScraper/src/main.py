@@ -1,4 +1,6 @@
-from extract import book_links, dedupe, next_page_url
+import json
+
+from extract import book_links, book_record, dedupe, next_page_url
 from fetcher import FetchError, PoliteFetcher
 
 BASE_URL = "https://books.toscrape.com/"
@@ -21,19 +23,38 @@ def discover(fetcher):
     return catalogue_pages, discovered
 
 
+def unique_targets(discovered):
+    targets = {}
+    for url, source_page in discovered:
+        targets.setdefault(url, source_page)
+    return targets
+
+
+def collect(fetcher, targets):
+    records = []
+    for product_url, source_page in targets.items():
+        html, _, fetched_at = fetcher.fetch(product_url)
+        records.append(book_record(html, product_url, source_page, fetched_at))
+    return records
+
+
 def main():
     fetcher = PoliteFetcher()
     try:
         catalogue_pages, discovered = discover(fetcher)
+        targets = unique_targets(discovered)
+        records = collect(fetcher, targets)
     except FetchError as error:
         print(f"FAILED {error}")
         return 1
 
-    unique = dedupe([url for url, _ in discovered])
-
+    print()
+    print(json.dumps(records[0], indent=2, ensure_ascii=False))
+    print()
     print(f"catalogue_pages={catalogue_pages}")
     print(f"discovered={len(discovered)}")
-    print(f"unique_urls={len(unique)}")
+    print(f"unique_urls={len(targets)}")
+    print(f"detail_pages={len(records)}")
     print(f"pages_fetched={fetcher.pages_fetched} cache_hits={fetcher.cache_hits}")
     return 0
 
