@@ -9,6 +9,7 @@ import config
 from access_routes import router as access_router
 from auth_routes import router as auth_router
 from auth_service import AuthService
+from llm.client import LLMClient
 from llm.service import TriageService
 from repo_postgres import PostgresTaskRepository
 from repo_sqlite import SqliteTaskRepository
@@ -54,7 +55,16 @@ def build_auth():
 
 app.state.service = TaskService(build_repository())
 app.state.auth = build_auth()
-app.state.triage = TriageService(config.LLM_STUB)
+def build_llm_client():
+    return LLMClient(
+        base_url=config.LLM_BASE_URL,
+        api_key=config.LLM_API_KEY,
+        model=config.LLM_MODEL,
+        timeout=config.LLM_TIMEOUT_SECONDS,
+    )
+
+
+app.state.triage = TriageService(config.LLM_STUB, build_llm_client(), config.PROMPT_VERSION)
 
 
 @app.exception_handler(HTTPException)

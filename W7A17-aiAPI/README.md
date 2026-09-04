@@ -197,3 +197,15 @@ Task 5 is still there after both containers were destroyed and rebuilt.
 ![Postgres in Docker](docs/postgres.png)
 
 More SQL in [docs/queries.sql](docs/queries.sql).
+
+## Prompt v1 — what three real inputs looked like
+
+Running `POST /tasks/triage` against `google/gemini-2.5-flash-lite` with `prompts/triage-v1.md` and `temperature=0`:
+
+| Input | `category` | `urgency` | `confidence` |
+| --- | --- | --- | --- |
+| "The login button does nothing on Safari 17. Works fine in Chrome." | `bug` | `high` | 0.95 |
+| "Can we add a dark mode toggle to the settings page?" | `feature` | `normal` | 0.90 |
+| "bump the postgres driver to the latest patch release" | `chore` | `normal` | 0.90 |
+
+**What surprised me:** the categories were right all three times, but the *shape* was not. Two answers came back as bare JSON and the third arrived wrapped in a ` ```json ` code fence — same prompt, same temperature, same model, one input apart. The prompt says "no markdown code fence" and the model still did it. That is the whole argument for Stage 3: asking politely for JSON is not a contract, parsing and validating it is. Three inputs was enough to catch it, which is also why eight test cases beat "it worked when I tried it".
