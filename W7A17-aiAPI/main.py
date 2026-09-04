@@ -64,7 +64,12 @@ def build_llm_client():
     )
 
 
-app.state.triage = TriageService(config.LLM_STUB, build_llm_client(), config.PROMPT_VERSION)
+app.state.triage = TriageService(
+    config.LLM_STUB,
+    build_llm_client(),
+    config.PROMPT_VERSION,
+    config.QUARANTINE_PATH,
+)
 
 
 @app.exception_handler(HTTPException)
