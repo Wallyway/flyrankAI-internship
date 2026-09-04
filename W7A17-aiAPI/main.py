@@ -9,10 +9,12 @@ import config
 from access_routes import router as access_router
 from auth_routes import router as auth_router
 from auth_service import AuthService
+from llm.service import TriageService
 from repo_postgres import PostgresTaskRepository
 from repo_sqlite import SqliteTaskRepository
 from routes import router
 from service import TaskService
+from triage_routes import router as triage_router
 
 
 @asynccontextmanager
@@ -26,6 +28,7 @@ tags_metadata = [
     {"name": "public", "description": "Open to anyone, no token needed."},
     {"name": "protected", "description": "Require an access token. Click Authorize and paste the one returned by /auth/login."},
     {"name": "tasks", "description": "The CRUD API from the previous assignment."},
+    {"name": "triage", "description": "Classifies a free-text task description with an LLM, and returns validated JSON."},
 ]
 
 app = FastAPI(
@@ -51,6 +54,7 @@ def build_auth():
 
 app.state.service = TaskService(build_repository())
 app.state.auth = build_auth()
+app.state.triage = TriageService(config.LLM_STUB)
 
 
 @app.exception_handler(HTTPException)
@@ -72,6 +76,7 @@ def validation_exception_handler(request: Request, exc: RequestValidationError):
 
 app.include_router(auth_router)
 app.include_router(access_router)
+app.include_router(triage_router)
 app.include_router(router)
 
 
