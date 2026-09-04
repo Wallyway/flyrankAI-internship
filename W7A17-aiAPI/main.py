@@ -61,11 +61,13 @@ def build_llm_client():
         api_key=config.LLM_API_KEY,
         model=config.LLM_MODEL,
         timeout=config.LLM_TIMEOUT_SECONDS,
+        max_attempts=config.LLM_MAX_ATTEMPTS,
     )
 
 
 app.state.triage = TriageService(
     config.LLM_STUB,
+    config.LLM_ENABLED,
     build_llm_client(),
     config.PROMPT_VERSION,
     config.QUARANTINE_PATH,
