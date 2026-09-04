@@ -3,3 +3,6 @@ uvicorn[standard]
 python-dotenv
 psycopg[binary,pool]
 supabase
+openai
+pydantic
+httpx
