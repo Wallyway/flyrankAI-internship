@@ -134,6 +134,7 @@ The cost is dominated by **input tokens**: the ~700-token system prompt is resen
 | `401` / `403` / `400` from the provider | `502`, immediately | **Never retried** — a bad key is still bad in four seconds |
 | Timeout, `429`, `5xx` | retried with backoff + jitter | `Retry-After` obeyed when present, in both seconds and HTTP-date form |
 | `LLM_ENABLED=false` | `200` with `source: "fallback"` | ~11 ms, zero model calls |
+| `LLM_API_KEY` not set | `503` naming the variable | The server still boots; `LLM_STUB=1` and the kill switch work with no key at all |
 
 **Retries are mine, not the SDK's.** The `openai` client is constructed with `max_retries=0` and an explicit `timeout`, because both of its defaults are wrong for an HTTP endpoint: it waits **ten minutes** and retries **twice** on its own. Left alone, one slow call would hold a connection open for ten minutes and a single request could quietly become three. The policy lives in [llm/retry.py](llm/retry.py) where it can be read and tested.
 

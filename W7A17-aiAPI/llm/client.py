@@ -20,23 +20,37 @@ def user_message(text: str) -> str:
 
 class LLMClient:
     def __init__(self, base_url: str, api_key: str, model: str, timeout: float, max_attempts: int):
+        self.base_url = base_url
+        self.api_key = api_key
         self.model = model
         self.timeout = timeout
         self.max_attempts = max_attempts
-        self.client = OpenAI(
-            base_url=base_url,
-            api_key=api_key,
-            timeout=timeout,
-            max_retries=0,
-        )
+        self._client = None
+
+    @property
+    def client(self) -> OpenAI:
+        if self._client is None:
+            if not self.api_key:
+                raise HTTPException(
+                    status_code=503,
+                    detail="LLM_API_KEY is not set. Add it to .env, or run with LLM_STUB=1 to skip the model.",
+                )
+            self._client = OpenAI(
+                base_url=self.base_url,
+                api_key=self.api_key,
+                timeout=self.timeout,
+                max_retries=0,
+            )
+        return self._client
 
     def complete(self, system_prompt: str, messages: list[dict]) -> tuple[str, dict]:
         payload = [{"role": "system", "content": system_prompt}] + messages
         started = time.monotonic()
+        client = self.client
 
         for attempt in range(1, self.max_attempts + 1):
             try:
-                response = self.client.chat.completions.create(
+                response = client.chat.completions.create(
                     model=self.model,
                     temperature=0,
                     messages=payload,

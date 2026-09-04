@@ -20,7 +20,16 @@ from triage_routes import router as triage_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("Server running and connected to Supabase")
+    auth_state = "Supabase auth ready" if app.state.auth else "auth disabled (no Supabase credentials)"
+    if config.LLM_STUB:
+        llm_state = "LLM stub mode"
+    elif not config.LLM_ENABLED:
+        llm_state = "LLM disabled (kill switch)"
+    elif not config.LLM_API_KEY:
+        llm_state = "LLM key missing"
+    else:
+        llm_state = f"LLM {config.LLM_MODEL}"
+    print(f"Server running | db={config.DB_BACKEND} | {auth_state} | {llm_state}")
     yield
 
 
