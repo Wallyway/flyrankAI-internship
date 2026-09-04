@@ -13,7 +13,9 @@ You hand it one sentence describing a piece of work — *"the login button does 
 ## Run it in five minutes
 
 ```bash
-cd W7A17-aiAPI
+git clone https://github.com/Wallyway/flyrankAI-internship.git
+cd flyrankAI-internship/W7A17-aiAPI
+
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
@@ -21,7 +23,9 @@ cp .env.example .env       # then paste your OpenRouter key into LLM_API_KEY
 uvicorn main:app --port 8000
 ```
 
-No Supabase, no Postgres and no Docker are needed to run the triage endpoint — the server boots on SQLite and the auth routes simply answer `503` until you configure them. Interactive docs at http://localhost:8000/docs.
+No Supabase, no Postgres and no Docker are needed to run the triage endpoint. `.env.example` defaults to `DB_BACKEND=sqlite`, so the server creates a local `tasks.db` and starts with nothing else installed; the auth routes simply answer `503` until you configure Supabase. Interactive docs at http://localhost:8000/docs.
+
+For the Postgres variant from the earlier assignment, `docker compose up` — the `app` service overrides `DB_BACKEND` to `postgres` itself, so you do not have to edit `.env` to switch between the two.
 
 Want to try it without spending a single model call? `LLM_STUB=1 uvicorn main:app --port 8000`.
 
@@ -194,8 +198,8 @@ Settings come from `.env`, which is gitignored and never committed. `.env.exampl
 | LLM_ENABLED       | `false` is the kill switch                       |
 | SUPABASE_URL      | Project URL, from Project Settings → API         |
 | SUPABASE_KEY      | Publishable (anon) key, from the same page       |
-| DB_BACKEND        | `postgres` or `sqlite`                           |
-| DATABASE_URL      | Postgres connection string                       |
+| DB_BACKEND        | `postgres` or `sqlite` — defaults to `sqlite`; `docker compose` overrides it to `postgres` |
+| DATABASE_URL      | Postgres connection string, used only when `DB_BACKEND=postgres` |
 | SQLITE_PATH       | Database file used by the sqlite backend         |
 | POSTGRES_USER     | Credentials the database container is created with |
 | POSTGRES_PASSWORD | Credentials the database container is created with |

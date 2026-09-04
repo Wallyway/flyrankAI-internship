@@ -16,6 +16,9 @@ services:
   app:
     build: .
     env_file: .env
+    environment:
+      - DB_BACKEND=postgres
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
     ports:
       - "8000:8000"
     depends_on:
