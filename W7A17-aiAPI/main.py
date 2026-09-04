@@ -16,6 +16,7 @@ from repo_sqlite import SqliteTaskRepository
 from routes import router
 from service import TaskService
 from triage_routes import router as triage_router
+from ui_routes import router as ui_router
 
 
 @asynccontextmanager
@@ -103,6 +104,7 @@ def validation_exception_handler(request: Request, exc: RequestValidationError):
 app.include_router(auth_router)
 app.include_router(access_router)
 app.include_router(triage_router)
+app.include_router(ui_router)
 app.include_router(router)
 
 

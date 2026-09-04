@@ -29,6 +29,10 @@ For the Postgres variant from the earlier assignment, `docker compose up` — th
 
 Want to try it without spending a single model call? `LLM_STUB=1 uvicorn main:app --port 8000`.
 
+### Trying it by hand
+
+There is a small web UI at **http://localhost:8000/ui** — a text box, the result as a card, and one-click presets for the cases worth seeing (a clear bug, an ambiguous one, a prompt-injection attempt, and two that trigger a `400`). It is a client of the same endpoint and holds no logic of its own: it posts to `/tasks/triage` and renders whatever comes back, errors included. The character counter is a hint, not a guard, so you can still send 2001 characters and watch the API reject it.
+
 ## One copy-pasteable curl, and its exact response
 
 ```bash
