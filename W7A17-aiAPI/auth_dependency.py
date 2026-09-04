@@ -9,7 +9,10 @@ bearer_scheme = HTTPBearer(auto_error=False, description="Paste the access_token
 
 
 def get_auth(request: Request) -> AuthService:
-    return request.app.state.auth
+    auth = request.app.state.auth
+    if auth is None:
+        raise HTTPException(status_code=503, detail="Authentication is not configured on this server")
+    return auth
 
 
 def get_token(credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme)) -> str:

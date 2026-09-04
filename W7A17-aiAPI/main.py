@@ -43,8 +43,14 @@ def build_repository():
     return SqliteTaskRepository(config.SQLITE_PATH)
 
 
+def build_auth():
+    if not config.SUPABASE_URL or not config.SUPABASE_KEY:
+        return None
+    return AuthService(config.SUPABASE_URL, config.SUPABASE_KEY)
+
+
 app.state.service = TaskService(build_repository())
-app.state.auth = AuthService(config.SUPABASE_URL, config.SUPABASE_KEY)
+app.state.auth = build_auth()
 
 
 @app.exception_handler(HTTPException)
@@ -52,9 +58,16 @@ def http_exception_handler(request: Request, exc: HTTPException):
     return JSONResponse(status_code=exc.status_code, content={"error": exc.detail})
 
 
+def describe_validation_error(error: dict) -> str:
+    location = [str(part) for part in error["loc"] if part != "body"]
+    field = ".".join(location) if location else "body"
+    return f"{field}: {error['msg']}"
+
+
 @app.exception_handler(RequestValidationError)
 def validation_exception_handler(request: Request, exc: RequestValidationError):
-    return JSONResponse(status_code=400, content={"error": "Invalid request body"})
+    details = [describe_validation_error(error) for error in exc.errors()]
+    return JSONResponse(status_code=400, content={"error": "; ".join(details)})
 
 
 app.include_router(auth_router)
